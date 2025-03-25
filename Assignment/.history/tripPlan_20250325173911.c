@@ -1,0 +1,5 @@
+/*
+    input n landmarks
+
+    input walking links
+*/
