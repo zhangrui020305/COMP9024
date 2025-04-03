@@ -122,7 +122,7 @@ int main()
     printf("Popularity ranking:\n");
     for (int i = 0; i < numOfVertices(g); i++)
     {
-        printf("%d %.2f\n", vertices[i].vertex, vertices[i].popularity);
+        printf("%d\t%.2f\n", vertices[i].vertex, vertices[i].popularity);
     }
 
     free(vertices);

@@ -119,10 +119,12 @@ int main()
 
     insertionSort(vertices, numOfVertices(g));
 
-    printf("Popularity ranking:\n");
+    // 输出排序结果
+    printf("\nSorted results (by popularity then vertex):\n");
+    printf("Vertex\tPopularity\n");
     for (int i = 0; i < numOfVertices(g); i++)
     {
-        printf("%d %.2f\n", vertices[i].vertex, vertices[i].popularity);
+        printf("%d\t%.2f\n", vertices[i].vertex, vertices[i].popularity);
     }
 
     free(vertices);
