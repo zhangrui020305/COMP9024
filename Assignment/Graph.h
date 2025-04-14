@@ -37,6 +37,6 @@ typedef struct TransportGraph
 
 void initGraph(TransportGraph *graph);
 void addLandmark(TransportGraph *graph, char *name);
-void addWalkingLink(TransportGraph *graph, char *from, char *to, char *duration);
-void addFerrySchedule(TransportGraph *graph, char *from, char *to, int *depart, int *arrive);
-void findDirectPath(TransportGraph *graph, char *from, char *to, int *departTime);
+void addWalkingLink(TransportGraph *graph, char *from, char *to, int duration);
+void addFerrySchedule(TransportGraph *graph, char *from, char *to, int depart, int arrive);
+void findDirectPath(TransportGraph *graph, char *from, char *to, int departTime);

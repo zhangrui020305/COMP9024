@@ -25,15 +25,20 @@ void addLandmark(TransportGraph *graph, char *name)
    graph->numLandmarks++;
 }
 
-void addWalkingLink(TransportGraph *graph, char *from, char *to, char *duration)
+void addWalkingLink(TransportGraph *graph, char *from, char *to, int duration)
 {
    strcpy(graph->walkingLinks[graph->numWalkingLinks].from, from);
    strcpy(graph->walkingLinks[graph->numWalkingLinks].to, to);
    graph->walkingLinks[graph->numWalkingLinks].duration = duration;
    graph->numWalkingLinks++;
+
+   strcpy(graph->walkingLinks[graph->numWalkingLinks].from, to);
+   strcpy(graph->walkingLinks[graph->numWalkingLinks].to, from);
+   graph->walkingLinks[graph->numWalkingLinks].duration = duration;
+   graph->numWalkingLinks++;
 }
 
-void addFerrySchedule(TransportGraph *graph, char *from, char *to, int *depart, int *arrive)
+void addFerrySchedule(TransportGraph *graph, char *from, char *to, int depart, int arrive)
 {
    strcpy(graph->ferrySchedule[graph->numFerrySchedule].from, from);
    strcpy(graph->ferrySchedule[graph->numFerrySchedule].to, to);
@@ -42,20 +47,16 @@ void addFerrySchedule(TransportGraph *graph, char *from, char *to, int *depart, 
    graph->numFerrySchedule++;
 }
 
-void findDirectPath(TransportGraph *graph, char *from, char *to, int *departTime)
+void findDirectPath(TransportGraph *graph, char *from, char *to, int departTime)
 {
-   printf("From: %s\n", from);
-   printf("To: %s\n", to);
-   printf("Departure time: %d\n", departTime);
-
    for (int i = 0; i < graph->numWalkingLinks; i++)
    {
       if (strcmp(graph->walkingLinks[i].from, from) == 0 &&
           strcmp(graph->walkingLinks[i].to, to) == 0)
       {
          printf("Walk %d minutes(s):\n", graph->walkingLinks[i].duration);
-         printf("  %d %s\n", departTime, from);
-         printf("  %d %s\n", departTime + graph->walkingLinks[i].duration, to);
+         printf("  %04d %s\n", departTime, from);
+         printf("  %04d %s\n", departTime + graph->walkingLinks[i].duration, to);
          return;
       }
    }
@@ -67,8 +68,9 @@ void findDirectPath(TransportGraph *graph, char *from, char *to, int *departTime
           graph->ferrySchedule[i].departTime >= departTime)
       {
          printf("Ferry %d minute(s)\n", graph->ferrySchedule[i].arriveTime - graph->ferrySchedule[i].departTime);
-         printf("  %d %s\n", graph->ferrySchedule[i].departTime, graph->ferrySchedule[i].from);
-         printf("  %d %s\n", graph->ferrySchedule[i].arriveTime, graph->ferrySchedule[i].to);
+         printf("  %04d %s\n", graph->ferrySchedule[i].departTime, graph->ferrySchedule[i].from);
+         printf("  %04d %s\n", graph->ferrySchedule[i].arriveTime, graph->ferrySchedule[i].to);
+         return;
       }
    }
 
