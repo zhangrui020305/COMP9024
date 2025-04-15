@@ -47,32 +47,71 @@ void addFerrySchedule(TransportGraph *graph, char *from, char *to, int depart, i
    graph->numFerrySchedule++;
 }
 
-void findDirectPath(TransportGraph *graph, char *from, char *to, int departTime)
+int getLandmarkIndex(TransportGraph *graph, const char *name)
 {
+   for (int i = 0; i < graph->numLandmarks; i++)
+   {
+      if (strcmp(graph->landmarks[i].name, name) == 0)
+      {
+         return i;
+      }
+   }
+   return -1;
+}
+
+void dfsWalk(TransportGraph *graph, char *current, char *destination, int currentTime, int visited[], int *found)
+{
+   int currIdx = getLandmarkIndex(graph, current);
+   visited[currIdx] = 1;
+
+   if (strcmp(current, destination) == 0)
+   {
+      *found = 1;
+      return;
+   }
+
    for (int i = 0; i < graph->numWalkingLinks; i++)
    {
-      if (strcmp(graph->walkingLinks[i].from, from) == 0 &&
-          strcmp(graph->walkingLinks[i].to, to) == 0)
+      if (strcmp(graph->walkingLinks[i].from, current) == 0)
       {
-         printf("Walk %d minutes(s):\n", graph->walkingLinks[i].duration);
-         printf("  %04d %s\n", departTime, from);
-         printf("  %04d %s\n", departTime + graph->walkingLinks[i].duration, to);
-         return;
+         int nextIdx = getLandmarkIndex(graph, graph->walkingLinks[i].to);
+         if (!visited[nextIdx])
+         {
+            printf("Walk %d minute(s):\n", graph->walkingLinks[i].duration);
+            printf("  %04d %s\n", currentTime, graph->walkingLinks[i].from);
+            printf("  %04d %s\n", currentTime + graph->walkingLinks[i].duration, graph->walkingLinks[i].to);
+            dfsWalk(graph, graph->walkingLinks[i].to, destination, currentTime + graph->walkingLinks[i].duration, visited, found);
+            if (*found)
+               return;
+         }
       }
    }
+}
 
-   for (int i = 0; i < graph->numFerrySchedule; i++)
-   {
-      if (strcmp(graph->ferrySchedule[i].from, from) == 0 &&
-          strcmp(graph->ferrySchedule[i].to, to) == 0 &&
-          graph->ferrySchedule[i].departTime >= departTime)
-      {
-         printf("Ferry %d minute(s)\n", graph->ferrySchedule[i].arriveTime - graph->ferrySchedule[i].departTime);
-         printf("  %04d %s\n", graph->ferrySchedule[i].departTime, graph->ferrySchedule[i].from);
-         printf("  %04d %s\n", graph->ferrySchedule[i].arriveTime, graph->ferrySchedule[i].to);
-         return;
-      }
-   }
+void findDirectPath(TransportGraph *graph, char *from, char *to, int departTime)
+{
+    int visited[MAX_LANDMARKS] = {0};
+    int found = 0;
 
-   printf("No route.");
+    int fromIdx = getLandmarkIndex(graph, from);
+    int toIdx = getLandmarkIndex(graph, to);
+    if (fromIdx == -1 || toIdx == -1) {
+        printf("No route.\n");
+        return;
+    }
+
+    dfsWalk(graph, from, to, departTime, visited, &found);
+    if (!found) {
+        for (int i = 0; i < graph->numFerrySchedule; i++) {
+            if (strcmp(graph->ferrySchedule[i].from, from) == 0 &&
+                strcmp(graph->ferrySchedule[i].to, to) == 0 &&
+                graph->ferrySchedule[i].departTime >= departTime) {
+                printf("Ferry %d minute(s)\n", graph->ferrySchedule[i].arriveTime - graph->ferrySchedule[i].departTime);
+                printf("  %04d %s\n", graph->ferrySchedule[i].departTime, graph->ferrySchedule[i].from);
+                printf("  %04d %s\n", graph->ferrySchedule[i].arriveTime, graph->ferrySchedule[i].to);
+                return;
+            }
+        }
+        printf("No route.\n");
+    }
 }
