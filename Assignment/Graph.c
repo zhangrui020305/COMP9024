@@ -59,10 +59,13 @@ int getLandmarkIndex(TransportGraph *graph, const char *name)
    return -1;
 }
 
-void dfsWalk(TransportGraph *graph, char *current, char *destination, int currentTime, int visited[], int *found)
+void dfs(TransportGraph *graph, char *current, char *destination, int currentTime,
+         int visited[MAX_LANDMARKS], int *found)
 {
-   int currIdx = getLandmarkIndex(graph, current);
-   visited[currIdx] = 1;
+   if (*found)
+   {
+      return;
+   }
 
    if (strcmp(current, destination) == 0)
    {
@@ -70,48 +73,58 @@ void dfsWalk(TransportGraph *graph, char *current, char *destination, int curren
       return;
    }
 
+   visited[getLandmarkIndex(graph, current)] = 1;
+
+   // Try to walk
    for (int i = 0; i < graph->numWalkingLinks; i++)
    {
-      if (strcmp(graph->walkingLinks[i].from, current) == 0)
+      // if from == current and place never visited before
+      if (strcmp(graph->walkingLinks[i].from, current) == 0 && !visited[getLandmarkIndex(graph, graph->walkingLinks[i].to)])
       {
-         int nextIdx = getLandmarkIndex(graph, graph->walkingLinks[i].to);
-         if (!visited[nextIdx])
-         {
-            printf("Walk %d minute(s):\n", graph->walkingLinks[i].duration);
-            printf("  %04d %s\n", currentTime, graph->walkingLinks[i].from);
-            printf("  %04d %s\n", currentTime + graph->walkingLinks[i].duration, graph->walkingLinks[i].to);
-            dfsWalk(graph, graph->walkingLinks[i].to, destination, currentTime + graph->walkingLinks[i].duration, visited, found);
-            if (*found)
-               return;
-         }
+         // update time
+         int nextTime = currentTime + graph->walkingLinks[i].duration;
+         printf("Walk %d minute(s):\n", graph->walkingLinks[i].duration);
+         printf("  %04d %s\n", currentTime, current);
+         printf("  %04d %s\n", nextTime, graph->walkingLinks[i].to);
+
+         dfs(graph, graph->walkingLinks[i].to, destination, nextTime, visited, found);
+
+         // if find a path return
+         if (*found)
+            return;
       }
    }
+
+   // Try to take ferry
+   for (int i = 0; i < graph->numFerrySchedule; i++)
+   {
+      if (strcmp(graph->ferrySchedule[i].from, current) == 0 && graph->ferrySchedule[i].departTime >= currentTime && !visited[getLandmarkIndex(graph, graph->ferrySchedule[i].to)])
+      {
+         int depart = graph->ferrySchedule[i].departTime;
+         int arrive = graph->ferrySchedule[i].arriveTime;
+
+         printf("Ferry %d minute(s):\n", arrive - depart);
+         printf("  %04d %s\n", depart, graph->ferrySchedule[i].from);
+         printf("  %04d %s\n", arrive, graph->ferrySchedule[i].to);
+
+         dfs(graph, graph->ferrySchedule[i].to, destination, arrive, visited, found);
+
+         if (*found)
+            return;
+      }
+   }
+
+   visited[getLandmarkIndex(graph, current)] = 0;
 }
 
 void findDirectPath(TransportGraph *graph, char *from, char *to, int departTime)
 {
-    int visited[MAX_LANDMARKS] = {0};
-    int found = 0;
+   int visited[MAX_LANDMARKS] = {0};
+   int found = 0;
+   dfs(graph, from, to, departTime, visited, &found);
 
-    int fromIdx = getLandmarkIndex(graph, from);
-    int toIdx = getLandmarkIndex(graph, to);
-    if (fromIdx == -1 || toIdx == -1) {
-        printf("No route.\n");
-        return;
-    }
-
-    dfsWalk(graph, from, to, departTime, visited, &found);
-    if (!found) {
-        for (int i = 0; i < graph->numFerrySchedule; i++) {
-            if (strcmp(graph->ferrySchedule[i].from, from) == 0 &&
-                strcmp(graph->ferrySchedule[i].to, to) == 0 &&
-                graph->ferrySchedule[i].departTime >= departTime) {
-                printf("Ferry %d minute(s)\n", graph->ferrySchedule[i].arriveTime - graph->ferrySchedule[i].departTime);
-                printf("  %04d %s\n", graph->ferrySchedule[i].departTime, graph->ferrySchedule[i].from);
-                printf("  %04d %s\n", graph->ferrySchedule[i].arriveTime, graph->ferrySchedule[i].to);
-                return;
-            }
-        }
-        printf("No route.\n");
-    }
+   if (!found)
+   {
+      printf("No route.\n");
+   }
 }
